@@ -1,46 +1,32 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-from collections import namedtuple
-Item = namedtuple("Item", ['index', 'value', 'weight'])
+import os
+from subprocess import Popen, PIPE
 
 def solve_it(input_data):
-    # Modify this code to run your optimization algorithm
+    # Writes the inputData to a temporay file
 
-    # parse the input
-    lines = input_data.split('\n')
+    tmp_file_name = 'tmp.data'
+    tmp_file = open(tmp_file_name, 'w')
+    tmp_file.write(input_data)
+    tmp_file.close()
 
-    firstLine = lines[0].split()
-    item_count = int(firstLine[0])
-    capacity = int(firstLine[1])
+    # Runs the command: ../cpp_solver/knapsack < tmp.data
 
-    items = []
+    process = Popen(['../cpp_solver/knapsack ' + tmp_file_name], shell=True, stdout=PIPE, universal_newlines=True)
+    # process = Popen('../cpp_solver/anyint', stdout=PIPE, universal_newlines=True)
+    (stdout, stderr) = process.communicate()
 
-    for i in range(1, item_count+1):
-        line = lines[i]
-        parts = line.split()
-        items.append(Item(i-1, int(parts[0]), int(parts[1])))
+    # removes the temporay file
+    os.remove(tmp_file_name)
 
-    # a trivial algorithm for filling the knapsack
-    # it takes items in-order until the knapsack is full
-    value = 0
-    weight = 0
-    taken = [0]*len(items)
+    return stdout.strip()
 
-    for item in items:
-        if weight + item.weight <= capacity:
-            taken[item.index] = 1
-            value += item.value
-            weight += item.weight
-    
-    # prepare the solution in the specified output format
-    output_data = str(value) + ' ' + str(0) + '\n'
-    output_data += ' '.join(map(str, taken))
-    return output_data
 
+import sys
 
 if __name__ == '__main__':
-    import sys
     if len(sys.argv) > 1:
         file_location = sys.argv[1].strip()
         with open(file_location, 'r') as input_data_file:
